@@ -19,11 +19,12 @@ class FixedBucket
 
     # Check if usages limit crossed
     if bucket["count"] > limit
-      return false
+      store_bucket(bucket)
+      false
+    else
+      store_bucket(bucket)
+      true
     end
-
-    store_bucket(bucket)
-    true
   end
 
   private
