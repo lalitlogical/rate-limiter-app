@@ -6,23 +6,25 @@ class RateLimiter
 
   def call(env)
     request = Rack::Request.new(env)
+
+    # Skip monitoring endpoints
+    return @app.call(env) if [ "/usage", "/dashboard" ].include?(request.path)
+
     user_id = request.get_header("HTTP_USER_ID")
-    plan = request.get_header("HTTP_PLAN") || "free"
+    return unauthorized unless user_id
 
-    key = "rate_limit:#{plan}:#{user_id}"
-    limit = plan == "paid" ? 100 : 10  # requests per minute
+    user = User.find_by(id: user_id)
+    return unauthorized unless user
 
-    current = $redis.get(key).to_i
-    # puts "Plan: #{plan} | Limit: #{limit} | Current: #{current}"
-    if current >= limit
+    # if request not allowed
+    unless RateLimiterService.new(user).allowed?
       return [ 429, { "Content-Type" => "application/json" }, [ { error: "Rate limit exceeded" }.to_json ] ]
-    else
-      $redis.multi do
-        $redis.incr(key)
-        $redis.expire(key, 60)
-      end
     end
 
     @app.call(env)
+  end
+
+  def unauthorized
+    [ 401, { "Content-Type" => "application/json" }, [ { error: "Unauthorized" }.to_json ] ]
   end
 end

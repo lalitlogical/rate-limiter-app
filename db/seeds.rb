@@ -7,3 +7,9 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
+
+free_plan = Plan.find_or_create_by(name: "free", limit: 10)
+paid_plan = Plan.find_or_create_by(name: "paid", limit: 100)
+
+User.find_or_create_by(name: "FreeUser", plan: free_plan)
+User.find_or_create_by(name: "PaidUser", plan: paid_plan)

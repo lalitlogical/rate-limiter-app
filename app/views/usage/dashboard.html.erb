@@ -1,0 +1,32 @@
+<!-- app/views/usage/dashboard.html.erb -->
+<h1>Rate Limit Dashboard</h1>
+<table border="1">
+  <thead>
+    <tr><th>User</th><th>Plan</th><th>Usage</th><th>Limit</th><th>Resets In</th></tr>
+  </thead>
+  <tbody id="usage-table"></tbody>
+</table>
+
+<script>
+  async function fetchUsage() {
+    const res = await fetch("/usage");
+    const data = await res.json();
+
+    const tbody = document.getElementById("usage-table");
+    tbody.innerHTML = "";
+    data.forEach(row => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${row.user_id}</td>
+          <td>${row.plan}</td>
+          <td>${row.usage}</td>
+          <td>${row.limit}</td>
+          <td>${row.reset_in_seconds}s</td>
+        </tr>
+      `;
+    });
+  }
+
+  setInterval(fetchUsage, 1000);  // refresh every second
+  fetchUsage();
+</script>
