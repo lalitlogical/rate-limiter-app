@@ -12,7 +12,7 @@ class UsageController < ApplicationController
       {
         user_id: user.id,
         plan: user.plan.name,
-        usage: usage["count"],
+        usage: usage,
         limit: user.plan.limit,
         reset_in_seconds: ttl
       }

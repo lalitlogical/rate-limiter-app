@@ -14,6 +14,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_17_132641) do
   create_table "plans", force: :cascade do |t|
     t.string "name"
     t.integer "limit"
+    t.integer "burst_capacity"
+    t.integer "token_rate"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

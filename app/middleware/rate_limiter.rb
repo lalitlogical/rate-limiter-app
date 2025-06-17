@@ -14,12 +14,22 @@ class RateLimiter
     return unauthorized unless user_id
 
     user = User.find_by(id: user_id)
-    return unauthorized unless user
+    return unauthorized unless user && user.plan
 
-    # if request not allowed
-    unless RateLimiterService.new(user).allowed?
-      return [ 429, { "Content-Type" => "application/json" }, [ { error: "Rate limit exceeded" }.to_json ] ]
+    # Fixed window limit
+    # unless RateLimiterService.new(user).allowed?
+    #   return [ 429, { "Content-Type" => "application/json" }, [ { error: "Rate limit exceeded" }.to_json ] ]
+    # end
+
+    plan = user.plan
+    burst = plan.burst_capacity || 10   # max burst
+    rate = plan.token_rate || 1         # tokens/sec
+
+    bucket = TokenBucket.new(user: user, rate: rate, burst_capacity: burst)
+    unless bucket.allowed?
+      return [ 429, { "Content-Type" => "application/json" }, [ { error: "Rate limit exceeded (burst)" }.to_json ] ]
     end
+
 
     @app.call(env)
   end

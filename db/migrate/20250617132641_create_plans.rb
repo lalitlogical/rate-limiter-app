@@ -3,6 +3,8 @@ class CreatePlans < ActiveRecord::Migration[8.0]
     create_table :plans do |t|
       t.string :name
       t.integer :limit
+      t.integer :burst_capacity
+      t.integer :token_rate
 
       t.timestamps
     end
