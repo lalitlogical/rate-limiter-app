@@ -1,9 +1,9 @@
-class FixedBucket
+class FixedWindow
   attr_reader :key, :limit
 
   def initialize(user)
     plan = user.plan
-    @key = "fixed_limit:#{plan.id}:#{user.id}"
+    @key = "fixed_window:#{plan.id}:#{user.id}"
     @limit = plan.limit
   end
 

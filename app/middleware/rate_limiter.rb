@@ -1,7 +1,12 @@
 # Testing with Apached Benchmark
 # ab -n 5 -c 1 -H "User-Id: 1" -H "Bucket-Type: token_bucket" http://localhost:3000/ping
+# ab -n 5 -c 1 -H "User-Id: 2" -H "Bucket-Type: token_bucket" http://localhost:3000/ping
+
 # ab -n 5 -c 1 -H "User-Id: 1" -H "Bucket-Type: leaky_bucket" http://localhost:3000/ping
-# ab -n 100 -c 1 -H "User-Id: 2" -H "Bucket-Type: fixed_bucket" http://localhost:3000/ping
+# ab -n 5 -c 1 -H "User-Id: 2" -H "Bucket-Type: leaky_bucket" http://localhost:3000/ping
+
+# ab -n 100 -c 1 -H "User-Id: 2" -H "Bucket-Type: fixed_window" http://localhost:3000/ping
+# ab -n 100 -c 1 -H "User-Id: 1" -H "Bucket-Type: fixed_window" http://localhost:3000/ping
 
 class RateLimiter
   def initialize(app)
@@ -12,7 +17,7 @@ class RateLimiter
     request = Rack::Request.new(env)
 
     # Skip monitoring endpoints
-    return @app.call(env) if [ "/usage", "/dashboard" ].include?(request.path)
+    return @app.call(env) if [ "/usage", "/usage.json", "/dashboard", "/" ].include?(request.path)
 
     user_id = request.get_header("HTTP_USER_ID")
     return unauthorized unless user_id
@@ -20,14 +25,14 @@ class RateLimiter
     user = User.find_by(id: user_id)
     return unauthorized unless user && user.plan
 
-    bucket_type = request.get_header("HTTP_BUCKET_TYPE") || "fixed_bucket"
+    bucket_type = request.get_header("HTTP_BUCKET_TYPE") || "fixed_window"
 
     puts "-" * 100
     puts "Bucket used for this request: #{bucket_type.humanize}"
     puts "-" * 100
 
-    bucket = if bucket_type == "fixed_bucket"
-      FixedBucket.new(user)
+    bucket = if bucket_type == "fixed_window"
+      FixedWindow.new(user)
     elsif bucket_type == "token_bucket"
       TokenBucket.new(user)
     elsif bucket_type == "leaky_bucket"

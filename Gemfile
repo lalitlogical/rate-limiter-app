@@ -51,3 +51,7 @@ group :development, :test do
   gem "factory_bot_rails"
   gem "byebug"
 end
+
+gem "actionview", "~> 8.0"
+
+gem "sprockets-rails", "~> 3.5"

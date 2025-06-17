@@ -1,0 +1,47 @@
+<!-- app/views/usage/dashboard.html.erb -->
+<h1 class="mb-4">📊 Rate Limit Usage Dashboard</h1>
+<div class="table-responsive">
+  <table class="table table-bordered table-hover table-sm">
+    <thead class="table-dark">
+      <tr>
+        <th>User</th>
+        <th>Plan</th>
+        <th>Limit</th>
+        <th>Bucket Type</th>
+        <th>Key</th>
+        <th>Usage</th>
+        <th>TTL (sec)</th>
+      </tr>
+    </thead>
+    <tbody id="usage-table"></tbody>
+  </table>
+</div>
+
+<script>
+  async function loadUsage() {
+    const res = await fetch("/usage.json");
+    const data = await res.json();
+
+    const table = document.getElementById('usage-table');
+    table.innerHTML = '';
+
+    data.forEach(user => {
+      user.usages.forEach(bucket => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${user.user_id}</td>
+          <td>${user.plan}</td>
+          <td>${user.limit}</td>
+          <td>${bucket.bucket_type}</td>
+          <td>${bucket.key}</td>
+          <td><pre>${JSON.stringify(bucket.data, null, 2)}</pre></td>
+          <td>${bucket.ttl}</td>
+        `;
+        table.appendChild(row);
+      });
+    });
+  }
+
+  loadUsage();
+  setInterval(loadUsage, 5000);
+</script>

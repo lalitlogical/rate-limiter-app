@@ -1,4 +1,4 @@
-class UsageController < ApplicationController
+class UsageController < ActionController::API
   def index
     result = User.all.map do |user|
       keys = $redis.scan_each(match: "*:#{user.id}").to_a
