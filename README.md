@@ -188,4 +188,4 @@ You should start seeing `429 Too Many Requests` responses once the limits are hi
 
 ## 📄 License
 
-IT License
+MIT License
