@@ -1,13 +1,3 @@
-# Testing with Apached Benchmark
-# ab -n 5 -c 1 -H "User-Id: 1" -H "Bucket-Type: token_bucket" http://localhost:3000/ping
-# ab -n 5 -c 1 -H "User-Id: 2" -H "Bucket-Type: token_bucket" http://localhost:3000/ping
-
-# ab -n 5 -c 1 -H "User-Id: 1" -H "Bucket-Type: leaky_bucket" http://localhost:3000/ping
-# ab -n 5 -c 1 -H "User-Id: 2" -H "Bucket-Type: leaky_bucket" http://localhost:3000/ping
-
-# ab -n 100 -c 1 -H "User-Id: 2" -H "Bucket-Type: fixed_window" http://localhost:3000/ping
-# ab -n 100 -c 1 -H "User-Id: 1" -H "Bucket-Type: fixed_window" http://localhost:3000/ping
-
 class RateLimiter
   def initialize(app)
     @app = app

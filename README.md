@@ -136,21 +136,48 @@ app/
     dashboard/index.html.erb
 ```
 
-## 🧪 Testing
+## 🧪 Testing with Apache Benchmark
 
-You can simulate burst testing using:
+To simulate high-frequency or burst traffic and verify the rate limiter behavior, you can use [`ab`](https://httpd.apache.org/docs/2.4/programs/ab.html) (Apache Benchmark).
 
-```bash
-for i in {1..100}; do
-  curl -H "User-Id: 1" http://localhost:3000/ping
-done
-```
-
-Or run parallel stress tests:
+### 🔧 Install Apache Benchmark (macOS)
 
 ```bash
-seq 1 100 | xargs -n1 -P20 -I{} curl -s -H "User-Id: 1" http://localhost:3000/ping
+brew install httpd
 ```
+
+This will install ab (Apache Benchmark), typically available at `/opt/homebrew/bin/ab`.
+
+### 🚀 Test Examples
+
+You can run the following commands to test different rate limiter types for different users:
+
+#### 🔁 Token Bucket
+
+```bash
+ab -n 5 -c 1 -H "User-Id: 1" -H "Bucket-Type: token_bucket" http://localhost:3000/ping
+ab -n 105 -c 1 -H "User-Id: 2" -H "Bucket-Type: token_bucket" http://localhost:3000/ping
+```
+
+#### 🚰 Leaky Bucket
+
+```bash
+ab -n 5 -c 1 -H "User-Id: 1" -H "Bucket-Type: leaky_bucket" http://localhost:3000/ping
+ab -n 95 -c 1 -H "User-Id: 2" -H "Bucket-Type: leaky_bucket" http://localhost:3000/ping
+```
+
+#### 🔒 Fixed Window
+
+```bash
+ab -n 5 -c 1 -H "User-Id: 1" -H "Bucket-Type: fixed_window" http://localhost:3000/ping
+ab -n 50 -c 1 -H "User-Id: 2" -H "Bucket-Type: fixed_window" http://localhost:3000/ping
+```
+
+- `-n`: Total number of requests to make
+- `-c`: Number of multiple requests to perform at a time (concurrency)
+- `-H`: Custom headers to pass for User ID and Bucket Type
+
+You should start seeing `429 Too Many Requests` responses once the limits are hit, depending on the bucket algorithm and user plan.
 
 ## 📌 Customization Ideas
 
