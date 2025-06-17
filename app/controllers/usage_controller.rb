@@ -1,20 +1,22 @@
-# app/controllers/usage_controller.rb
 class UsageController < ApplicationController
   def index
-    users = User.all
+    result = User.all.map do |user|
+      keys = $redis.scan_each(match: "*:#{user.id}").to_a
 
-    result = users.map do |user|
-      rate_limiter_service = RateLimiterService.new(user)
-      key = rate_limiter_service.key
-      usage = rate_limiter_service.current_usage
-      ttl = $redis.ttl(key)
+      usage_data = keys.map do |key|
+        {
+          bucket_type: key.split(":").first,
+          key: key,
+          data: JSON.parse($redis.get(key) || "{}"),
+          ttl: $redis.ttl(key)
+        }
+      end
 
       {
         user_id: user.id,
         plan: user.plan.name,
-        usage: usage,
         limit: user.plan.limit,
-        reset_in_seconds: ttl
+        usages: usage_data
       }
     end
 

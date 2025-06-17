@@ -1,30 +1,41 @@
 # app/services/token_bucket.rb
 class TokenBucket
-  def initialize(user:, rate:, burst_capacity:)
-    @rate = rate                # tokens per second
-    @burst = burst_capacity     # max bucket size
-    @key = "rate_limit:#{user.plan.id}:#{user.id}"
+  attr_reader :key, :rate, :burst
+
+  def initialize(user)
+    plan = user.plan
+    @key = "token_bucket:#{plan.id}:#{user.id}"
+    @rate = plan.token_rate || 1         # tokens/sec
+    @burst = plan.burst_capacity || 10   # max burst
   end
 
   def allowed?
     now = Time.now.to_f
-
-    # get stored state
-    state = $redis.get(@key)
-    bucket = state ? JSON.parse(state) : { "tokens" => @burst, "last" => now }
+    puts bucket = fetch_bucket(now)
 
     elapsed = now - bucket["last"]
-    new_tokens = (elapsed * @rate).floor
-    bucket["tokens"] = [ @burst, bucket["tokens"] + new_tokens ].min
+    new_tokens = (elapsed * rate).floor
+    bucket["tokens"] = [ burst, bucket["tokens"] + new_tokens ].min
     bucket["last"] = now
 
     if bucket["tokens"] > 0
       bucket["tokens"] -= 1
-      $redis.set(@key, bucket.to_json)
+      store_bucket(bucket)
       true
     else
-      $redis.set(@key, bucket.to_json)
+      store_bucket(bucket)
       false
     end
+  end
+
+  private
+
+  def store_bucket(bucket)
+    $redis.set(key, bucket.to_json, ex: 3600)
+  end
+
+  def fetch_bucket(now)
+    raw = $redis.get(key)
+    raw ? JSON.parse(raw) : { "tokens" => burst, "last" => now }
   end
 end

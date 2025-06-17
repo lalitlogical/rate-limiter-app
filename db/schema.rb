@@ -16,6 +16,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_17_132641) do
     t.integer "limit"
     t.integer "burst_capacity"
     t.integer "token_rate"
+    t.integer "bucket_capacity"
+    t.integer "leak_rate"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

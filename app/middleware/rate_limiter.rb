@@ -1,4 +1,8 @@
-# app/middleware/rate_limiter.rb
+# Testing with Apached Benchmark
+# ab -n 5 -c 1 -H "User-Id: 1" -H "Bucket-Type: token_bucket" http://localhost:3000/ping
+# ab -n 5 -c 1 -H "User-Id: 1" -H "Bucket-Type: leaky_bucket" http://localhost:3000/ping
+# ab -n 100 -c 1 -H "User-Id: 2" -H "Bucket-Type: fixed_bucket" http://localhost:3000/ping
+
 class RateLimiter
   def initialize(app)
     @app = app
@@ -16,20 +20,26 @@ class RateLimiter
     user = User.find_by(id: user_id)
     return unauthorized unless user && user.plan
 
-    # Fixed window limit
-    # unless RateLimiterService.new(user).allowed?
-    #   return [ 429, { "Content-Type" => "application/json" }, [ { error: "Rate limit exceeded" }.to_json ] ]
-    # end
+    bucket_type = request.get_header("HTTP_BUCKET_TYPE") || "fixed_bucket"
 
-    plan = user.plan
-    burst = plan.burst_capacity || 10   # max burst
-    rate = plan.token_rate || 1         # tokens/sec
+    puts "-" * 100
+    puts "Bucket used for this request: #{bucket_type.humanize}"
+    puts "-" * 100
 
-    bucket = TokenBucket.new(user: user, rate: rate, burst_capacity: burst)
-    unless bucket.allowed?
-      return [ 429, { "Content-Type" => "application/json" }, [ { error: "Rate limit exceeded (burst)" }.to_json ] ]
+    bucket = if bucket_type == "fixed_bucket"
+      FixedBucket.new(user)
+    elsif bucket_type == "token_bucket"
+      TokenBucket.new(user)
+    elsif bucket_type == "leaky_bucket"
+      LeakyBucket.new(user)
     end
 
+    unless bucket.allowed?
+      puts "-" * 100
+      puts "Rate limit exceeded while using #{bucket_type.humanize}."
+      puts "-" * 100
+      return [ 429, { "Content-Type" => "application/json" }, [ { error: "Rate limit exceeded while using #{bucket_type.humanize}." }.to_json ] ]
+    end
 
     @app.call(env)
   end
