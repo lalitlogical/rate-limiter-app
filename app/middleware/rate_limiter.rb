@@ -13,6 +13,7 @@ class RateLimiter
     limit = plan == "paid" ? 100 : 10  # requests per minute
 
     current = $redis.get(key).to_i
+    # puts "Plan: #{plan} | Limit: #{limit} | Current: #{current}"
     if current >= limit
       return [ 429, { "Content-Type" => "application/json" }, [ { error: "Rate limit exceeded" }.to_json ] ]
     else

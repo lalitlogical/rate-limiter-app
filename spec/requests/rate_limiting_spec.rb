@@ -34,7 +34,7 @@ RSpec.describe "Rate Limiter", type: :request do
         get "/ping", headers: { "User-Id" => user_id, "Plan" => "paid" }
       end
 
-      get "/ping", headers: { "User-Id" => user_id, "Plan" => "free" }
+      get "/ping", headers: { "User-Id" => user_id, "Plan" => "paid" }
       expect(response.status).to eq(429)
     end
   end
