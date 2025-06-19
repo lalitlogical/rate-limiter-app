@@ -27,6 +27,8 @@ class RateLimiter
       TokenBucket.new(user)
     elsif bucket_type == "leaky_bucket"
       LeakyBucket.new(user)
+    elsif bucket_type == "token_bucket_lua"
+      TokenBucketLimiter.new(user)
     end
 
     unless bucket.allowed?
